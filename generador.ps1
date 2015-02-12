@@ -7,9 +7,7 @@ Ignacio Lis
 Provisionamiento de usuarios para xxxx
 
 .DESCRIPTION
-La función Crear-Contraseña genera una contraseña aleatoria de N caracteres (por defecto 10) compuesta por
-mayúsculas, minúsculas, números y caracteres especiales.
-La función Asignar-Contraseña asigna la contraseña aleatoria generada con Crear-Contraseña al usuario indicado
+La función Asignar-Contraseña asigna una contraseña (la misma) a cada usuario de la lista
 El cuerpo del script recoge los usuarios, sus direcciones de correo y su estado de un CSV. Para los usuarios activos
 y con correo genera una contraseña y la envía por correo.
 Formato del csv de entrada:
@@ -22,23 +20,8 @@ usuario2@otrodominio.com,usu2,bloqueado
 
 .NOTES
 Ejecutar con un usuario administrador del dominio
-Revisar parámetros y ajustarlos al entorno de PROD
 
 #>
-
-function Crear-Contraseña {
-  #Si no se indica otra cosa, la longitud será 10 por defecto
-  Param([int]$tamaño=10)
-  #Alfabeto para las claves
-  #Serán los caracteres ASCII entre el 33 (!) y el 126 (~)
-  $diccionario = $NULL;For ($i=33;$i -le 126;$i++) {$diccionario+=,[char][byte]$i}
-  $contraseña = ""
-  #Generación de la contraseña
-  For($j=1;$j -le $tamaño;$j++) {
-    $contraseña+=($diccionario|Get-Random)
-  }
-  return $contraseña
-}
 
 function Enviar-Correo {
   Param([string]$dirección,[string]$nombreDeUsuario,[string]$contraseña)
@@ -77,7 +60,7 @@ Import-Csv -Path .\listausuarios.csv -Delimiter "," | ForEach-Object {
     if ($_.estado -eq "activo") {
       #Try/Catch
       Try {
-        $contraseña = Crear-Contraseña(10)
+        $contraseña = "lamismaparatodos"
         Asignar-Contraseña -usuario $_.username -contraseña $contraseña -credenciales $credencialesDominioDesarrollo
         Write-Host "Asignada al usuario" $_.username "con correo-e" $_.email "la contraseña:" $contraseña
         Enviar-Correo -dirección $_.email -nombreDeUsuario $_.username -contraseña $contraseña
